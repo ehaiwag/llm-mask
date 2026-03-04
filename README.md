@@ -75,7 +75,7 @@ After receiving the LLM response, `unmask` restores the original values.
 Install with one command:
 
 ```bash
-curl -s https://raw.githubusercontent.com/YOURNAME/llm-mask/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ehaiwag/llm-mask/main/install.sh | bash
 ```
 
 After installation, the following directory is created:
