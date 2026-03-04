@@ -1,10 +1,10 @@
 # llm-mask
 
-**llm-mask** is a local reversible masking tool designed to safely send text containing sensitive information to LLMs (ChatGPT, Claude, etc.).
+**llm-mask** is a lightweight local tool that allows you to safely send text containing sensitive information to LLMs (ChatGPT, Claude, etc.).
 
 It replaces sensitive information with tokens before sending the text to an LLM and restores the original values afterward.
 
-The tool is optimized for a **clipboard-based workflow**, which works especially well with **Web ChatGPT**.
+The tool is designed for a **clipboard-based workflow**, making it especially convenient when using **Web ChatGPT**.
 
 ---
 
@@ -26,21 +26,21 @@ unmask (restore original data)
 Recovered original content
 ```
 
-Example:
+Example
 
-Original text:
+Original text
 
 ```
 My email is cass@example.com and the project is ProjectX.
 ```
 
-Masked text:
+Masked text
 
 ```
 My email is ⟦EMAIL_1_ab12cd⟧ and the project is ⟦PHRASE_1_cd34ef⟧.
 ```
 
-Mapping file:
+Mapping file
 
 ```json
 {
@@ -49,50 +49,67 @@ Mapping file:
 }
 ```
 
-After receiving the LLM response, `unmask` restores the original values.
+After receiving the LLM response, `unmaskclip` restores the original values.
 
 ---
 
 # Features
 
-- Reversible masking
-- Company name masking
-- Custom keyword masking
-- Automatic detection of common sensitive patterns:
-  - Email
+- reversible masking
+- company / project name masking
+- custom keyword masking
+- automatic detection of common sensitive patterns
+  - email
   - IP address
   - API keys
   - JWT tokens
-- Clipboard workflow (ideal for Web ChatGPT)
+- clipboard workflow (ideal for Web ChatGPT)
 - macOS and Linux support
-- Temporary masking keywords
-- Local mapping files (never sent to LLM)
+- temporary masking keywords
+- local mapping files (never sent to LLM)
 
 ---
 
 # Installation
 
-Install with one command:
+Install with one command
 
-```bash
+```
 curl -fsSL https://raw.githubusercontent.com/ehaiwag/llm-mask/main/install.sh | bash
 ```
 
-After installation, the following directory is created:
+Restart your shell
 
 ```
-~/.llm-mask/
-│
-├── sensitive.txt
-├── last_map
-│
-└── maps/
-```
-
-Restart your shell or run:
-
-```bash
 source ~/.zshrc
+```
+
+---
+
+# Installer Options
+
+Clean reinstall
+
+```
+curl -fsSL https://raw.githubusercontent.com/ehaiwag/llm-mask/main/install.sh | bash -s -- --clean
+```
+
+Uninstall
+
+```
+curl -fsSL https://raw.githubusercontent.com/ehaiwag/llm-mask/main/install.sh | bash -s -- --uninstall
+```
+
+Install to custom directory
+
+```
+curl -fsSL https://raw.githubusercontent.com/ehaiwag/llm-mask/main/install.sh | bash -s -- --prefix ~/.local/llm-mask
+```
+
+Quiet installation
+
+```
+curl -fsSL https://raw.githubusercontent.com/ehaiwag/llm-mask/main/install.sh | bash -s -- --quiet
 ```
 
 ---
@@ -105,7 +122,7 @@ source ~/.zshrc
 maskclip
 ```
 
-Workflow:
+Workflow
 
 ```
 Copy text
@@ -133,7 +150,7 @@ These keywords apply **only to the current masking operation**.
 unmaskclip
 ```
 
-Workflow:
+Workflow
 
 ```
 Copy ChatGPT response
@@ -153,15 +170,39 @@ unmaskclip path/to/map.json
 
 ---
 
+# Real Usage Example
+
+Example scenario: sending infrastructure logs to ChatGPT.
+
+Original log
+
+```
+Service deployed to cn40 cluster by ProjectX
+API endpoint: https://corp.example.com/api
+```
+
+Masked version
+
+```
+Service deployed to ⟦PHRASE_1_x83fa2⟧ cluster by ⟦PHRASE_2_8dd1a4⟧
+API endpoint: ⟦URL_1_ae22f1⟧
+```
+
+ChatGPT analyzes the log safely without seeing sensitive information.
+
+After running `unmaskclip`, the original values are restored.
+
+---
+
 # Sensitive Word Configuration
 
-Sensitive phrases are stored in:
+Sensitive phrases are stored in
 
 ```
 ~/.llm-mask/sensitive.txt
 ```
 
-Example:
+Example
 
 ```
 # company names
@@ -178,34 +219,34 @@ llm-access
 corp.example.com
 ```
 
-Rules:
+Rules
 
-- One phrase per line
-- `#` is treated as a comment
-- Matching is case-insensitive by default
+- one phrase per line
+- `#` starts a comment
+- matching is case-insensitive
 
 ---
 
-# Token Format
+# How Masking Works
 
-Masked tokens follow this structure:
+1. Sensitive phrases and patterns are detected.
+2. Each sensitive value is replaced with a unique token.
+3. A mapping file records the relationship.
+
+Example token
 
 ```
 ⟦TYPE_INDEX_RANDOM⟧
 ```
 
-Examples:
+Examples
 
 ```
 ⟦EMAIL_1_ab12cd⟧
 ⟦PHRASE_2_cd34ef⟧
 ```
 
-Design goals:
-
-- Avoid collisions with natural language
-- Reduce the chance of LLM modifying tokens
-- Ensure uniqueness
+The mapping file allows the original text to be restored later.
 
 ---
 
@@ -213,41 +254,91 @@ Design goals:
 
 Mapping files store token-to-original-value relationships.
 
-Location:
+Location
 
 ```
 ~/.llm-mask/maps/
 ```
 
-Example:
+Example
 
 ```
 ~/.llm-mask/maps/2026-03-04_104212.json
 ```
 
-The most recent mapping file is stored in:
+The most recent mapping file is stored in
 
 ```
 ~/.llm-mask/last_map
 ```
 
-This allows `unmaskclip` to automatically restore the latest masked text.
+---
+
+# Clipboard Support
+
+The tool automatically detects clipboard utilities.
+
+| OS | Clipboard Tool |
+|----|---------------|
+| macOS | pbcopy / pbpaste |
+| Linux | xclip |
+
+Install xclip on Linux
+
+```
+sudo apt install xclip
+```
 
 ---
 
-# Security Notes
+# Architecture
 
-Mapping files should **never be sent to LLMs**.
+The project follows a simple layered design.
 
-Recommended permissions:
+```
+maskclip / unmaskclip
+        │
+        ▼
+shell wrapper (llm-mask.sh)
+        │
+        ▼
+Python core logic (llm_mask.py)
+```
 
-```bash
+Components
+
+| Component | Purpose |
+|---|---|
+| install.sh | installer |
+| llm_mask.py | masking engine |
+| llm-mask.sh | CLI wrapper |
+| sensitive.txt | user maintained keywords |
+
+This design keeps:
+
+- **CLI logic in shell**
+- **masking logic in Python**
+- **installation logic in install.sh**
+
+---
+
+# Security Model
+
+Important rules
+
+- Mapping files remain **local only**
+- Mapping files should **never be sent to LLMs**
+- Tokens contain **no sensitive data**
+
+Recommended permissions
+
+```
 chmod 600 ~/.llm-mask/maps/*
 ```
 
-Optional cleanup of old mappings:
+Optional cleanup
 
-```bash
+```
 find ~/.llm-mask/maps -mtime +7 -delete
 ```
 
@@ -264,23 +355,53 @@ Keep them exactly unchanged.
 
 ---
 
-# System Requirements
+# Troubleshooting
 
-- Python 3
-- macOS or Linux
+### maskclip command not found
 
-Clipboard tools:
+Restart your shell
 
-| OS | Clipboard Tool |
-|----|---------------|
-| macOS | pbcopy / pbpaste |
-| Linux | xclip |
+```
+source ~/.zshrc
+```
 
-Install xclip on Linux:
+---
 
-```bash
+### clipboard not working
+
+Check clipboard tool
+
+macOS
+
+```
+pbcopy
+pbpaste
+```
+
+Linux
+
+```
 sudo apt install xclip
 ```
+
+---
+
+### mapping file missing
+
+Ensure `maskclip` was executed before `unmaskclip`.
+
+---
+
+# Roadmap
+
+Possible future improvements
+
+- pip install support
+- automatic mapping cleanup
+- fuzzy token recovery (if LLM modifies tokens)
+- browser extension integration
+- Raycast / Alfred integration
+- automatic secret detection (NER)
 
 ---
 
@@ -289,7 +410,6 @@ sudo apt install xclip
 ```
 llm-mask/
 │
-├── README.md
 ├── install.sh
 │
 ├── bin/
