@@ -1,0 +1,10 @@
+# company names
+YourCompany
+YourCompanyAbbr
+
+# projects
+ProjectX
+PhoenixCluster
+
+# infra
+corp.example.com
