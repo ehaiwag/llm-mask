@@ -214,7 +214,6 @@ ProjectX
 PhoenixCluster
 
 # infrastructure
-cn40
 llm-access
 corp.example.com
 ```
